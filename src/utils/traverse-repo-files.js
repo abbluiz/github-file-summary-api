@@ -17,7 +17,7 @@ const countBytes = async (text) => {
      * 0lines(0sloc)0Bytes
      * where 'Bytes' might be 'KB' instead
      * and 0 in '0Bytes' may vary according to the size of a file in a GitHub repo
-     * (or 'x.xKB' where x.x is a real number) */
+     * (or 'x.xKB' where x.x is a real number)` */
 
     let indexOfBytesWord = text.indexOf('Bytes');
 
