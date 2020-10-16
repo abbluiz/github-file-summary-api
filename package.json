@@ -18,5 +18,8 @@
   "homepage": "https://github.com/abbluiz/github-file-summary-api#readme",
   "devDependencies": {
     "nodemon": "^2.0.5"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
   }
 }
