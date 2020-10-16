@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/abbluiz/github-file-summary-api/issues"
   },
-  "homepage": "https://github.com/abbluiz/github-file-summary-api#readme"
+  "homepage": "https://github.com/abbluiz/github-file-summary-api#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.5"
+  }
 }
