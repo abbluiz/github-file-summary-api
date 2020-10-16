@@ -1,8 +1,6 @@
 const axios = require('axios');
 
-const githubRequest = async (callback) => {
-
-    const url = 'https://github.com/PrivacidadeDigital/privacidade.digital';
+const githubRequest = async (url, callback) => {
 
     try {
 
@@ -10,7 +8,7 @@ const githubRequest = async (callback) => {
         callback(undefined, response);
 
     } catch (error) {
-        callback(error.message, undefined);
+        callback(error, undefined);
     }
 
 };
