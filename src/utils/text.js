@@ -14,10 +14,16 @@ const countLines = (text) => {
     *  text will be something like this:
     *  0lines(0sloc)0Bytes
     *  where 0 in '0lines' may vary according to the number of lines of a file in a GitHub repo 
+    *  sometimes a file doesn't have any lines
     */
 
-    const indexOfLinesWord = text.indexOf('lines');
-    return parseInt(text.slice(0, indexOfLinesWord));
+   const indexOfLinesWord = text.indexOf('lines');
+   
+    if (indexOfLinesWord != -1) {
+        return parseInt(text.slice(0, indexOfLinesWord));
+    } else {
+        return 0;
+    }
 
 };
 

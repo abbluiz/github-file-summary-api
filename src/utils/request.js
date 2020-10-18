@@ -3,6 +3,7 @@ const axios = require('axios');
 const githubRequest = async (path, callback) => {
 
     const url = 'https://github.com/' + path;
+    // console.log(url);
 
     try {
 

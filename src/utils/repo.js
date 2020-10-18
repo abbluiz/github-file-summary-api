@@ -43,13 +43,15 @@ const buildRepoSummary = async (path, repo, defaultBranch, extensionStats) => {
             const pathLength = fakeDom('.Details').find('.Box-row').length;
             const allBoxRowSelectors = [];
 
-            for (let i = 2; i <= pathLength; i++) {
+            for (let i = 2; i <= pathLength + 1; i++) {
                 allBoxRowSelectors.push('.Box-row:nth-child('+ i + ')');
             }
 
             await Promise.all(allBoxRowSelectors.map(async (boxRowSelector) => {
 
                 if (!isParentDirectoryBox(fakeDom, boxRowSelector)) {
+
+                    console.log(fakeDom('.Details').find(boxRowSelector).html());
 
                     if (isDirectoryBox(fakeDom, boxRowSelector)) {
                         
