@@ -20,7 +20,7 @@ const determineFileSizeAndExtension = (url, fakeDom) => ({
 
 });
 
-const buildRepoSummary = async (path, repo, defaultBranch, extensionStats, mode) => {
+const buildSummary = async (path, repo, defaultBranch, extensionStats, mode) => {
 
     let fakeDom = {};
 
@@ -59,13 +59,13 @@ const buildRepoSummary = async (path, repo, defaultBranch, extensionStats, mode)
                             
                             const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(treePathPattern), '');
     
-                            await buildRepoSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+                            await buildSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
     
                         } else if (isFileBox(fakeDom, boxRowSelector)) {
     
                             const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
                             
-                            await buildRepoSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+                            await buildSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
     
                         }
     
@@ -86,13 +86,13 @@ const buildRepoSummary = async (path, repo, defaultBranch, extensionStats, mode)
                             
                             const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(treePathPattern), '');
     
-                            await buildRepoSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+                            await buildSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
     
                         } else if (isFileBox(fakeDom, allBoxRowSelectors[j])) {
     
                             const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
                             
-                            await buildRepoSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+                            await buildSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
     
                         }
     
