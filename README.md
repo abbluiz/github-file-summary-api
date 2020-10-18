@@ -42,9 +42,13 @@ The results of a particular request will be saved in a cache for 6 hours before 
 
 For web scraping I have created a "fake DOM" on the server. With this DOM, I can filter data using jQuery-like css selectors. To load the fake DOM, I have used the library Cheerio.
 
+### Recursion
+
+The API will crawl the repo files in a recursive manner. Each time the recursion finds a file page, it uses the fake dom to find information about the size in the page, and updates an object with the sum of the of lines and bytes of a particular file extension.
+
 ### Promiscuous Mode
 
-You can pass `?mode=promiscuous` to the request if you want to enable this mode, which will make dozens of requests per second by making concurrent asynchronous requests. However, this will not work for big repositories, because GitHub will send "429 Too Many Requests" Error responses. 
+You can pass `?mode=promiscuous` to the request if you want to enable this mode, which will make dozens of requests per second by making concurrent asynchronous requests during recursion. However, this will not work for big repositories, because GitHub will send "429 Too Many Requests" Error responses. 
 
 ### Default Mode
 
