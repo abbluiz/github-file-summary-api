@@ -4,9 +4,7 @@ const escapeStringRegexp = require('escape-string-regexp');
 const githubRequest = require('./request');
 const text = require('./text');
 
-const loadFakeDom = (githubResponseData) => {
-    return cheerio.load(githubResponseData);
-};
+const loadFakeDom = (githubResponseData) => cheerio.load(githubResponseData);
 
 const determineDefaultBranch = (fakeDom) => text.removeAllWhitespace(fakeDom('#branch-select-menu').text());
 
@@ -224,7 +222,7 @@ module.exports = {
     loadFakeDom,
     determineDefaultBranch,
     determineFileSizeAndExtension,
-    buildRepoSummary,
+    buildSummary,
     isValid,
     isModeValid
 

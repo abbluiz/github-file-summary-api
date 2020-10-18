@@ -51,7 +51,7 @@ router.get('/', cache.get, async (request, response, next) => {
         const url = request.query.repo + '/file-list/' + defaultBranch + '/';
 
         const extensionStats = {};
-        await repo.buildRepoSummary(url, request.query.repo, defaultBranch, extensionStats, mode);
+        await repo.buildSummary(url, request.query.repo, defaultBranch, extensionStats, mode);
 
         response.locals.data = extensionStats;
         response.send(response.locals.data);
