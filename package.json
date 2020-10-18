@@ -27,6 +27,8 @@
     "axios": "^0.20.0",
     "cheerio": "^1.0.0-rc.3",
     "escape-string-regexp": "^4.0.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "node-cache": "^5.1.2",
+    "retry-axios": "^2.2.1"
   }
 }

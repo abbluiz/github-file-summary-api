@@ -14,7 +14,7 @@ const countLines = (text) => {
     *  text will be something like this:
     *  0lines(0sloc)0Bytes
     *  where 0 in '0lines' may vary according to the number of lines of a file in a GitHub repo 
-    *  sometimes a file doesn't have any lines
+    *  sometimes a file doesn't have any lines of code, in this case it will count as 1 lines
     */
 
    const indexOfLinesWord = text.indexOf('lines');
@@ -22,7 +22,7 @@ const countLines = (text) => {
     if (indexOfLinesWord != -1) {
         return parseInt(text.slice(0, indexOfLinesWord));
     } else {
-        return 0;
+        return 1;
     }
 
 };
@@ -44,12 +44,26 @@ const countBytes = (text) => {
 
     const indexOfLastParentheses = text.indexOf(')');
 
-    if (indexOfBytesWord > -1) {
-        return parseInt(text.slice(indexOfLastParentheses + 1, indexOfBytesWord));
-    } else if (indexOfKBWord > -1) {
-        return Math.round(parseFloat(text.slice(indexOfLastParentheses+1, indexOfKBWord)) * 1024);
+    if (indexOfLastParentheses != -1) {
+
+        if (indexOfBytesWord > -1) {
+            return parseInt(text.slice(indexOfLastParentheses + 1, indexOfBytesWord));
+        } else if (indexOfKBWord > -1) {
+            return Math.round(parseFloat(text.slice(indexOfLastParentheses+1, indexOfKBWord)) * 1024);
+        } else {
+            return Math.round(parseFloat(text.slice(indexOfLastParentheses+1, indexOfMBWord)) * 1024 * 1024);
+        }
+
     } else {
-        return Math.round(parseFloat(text.slice(indexOfLastParentheses+1, indexOfMBWord)) * 1024 * 1024);
+
+        if (indexOfBytesWord > -1) {
+            return parseInt(text.slice(0, indexOfBytesWord));
+        } else if (indexOfKBWord > -1) {
+            return Math.round(parseFloat(text.slice(0, indexOfKBWord)) * 1024);
+        } else {
+            return Math.round(parseFloat(text.slice(0, indexOfMBWord)) * 1024 * 1024);
+        }
+
     }
 
 };

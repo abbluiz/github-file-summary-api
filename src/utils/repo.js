@@ -15,12 +15,12 @@ const determineFileSizeAndExtension = (url, fakeDom) => ({
     url,
     stats: {
         fileExtension: text.extractFileExtensionFromUrl(url),
-        size: text.countLinesAndBytesOfFile(fakeDom('.repository-content > div:nth-child(5) > .Box-header > div:first-child').text())
+        size: text.countLinesAndBytesOfFile(fakeDom('.Box > .Box-header > .text-mono').text())
     }
 
 });
 
-const buildRepoSummary = async (path, repo, defaultBranch, extensionStats) => {
+const buildRepoSummary = async (path, repo, defaultBranch, extensionStats, mode) => {
 
     let fakeDom = {};
 
@@ -43,47 +43,87 @@ const buildRepoSummary = async (path, repo, defaultBranch, extensionStats) => {
             const pathLength = fakeDom('.Details').find('.Box-row').length;
             const allBoxRowSelectors = [];
 
-            for (let i = 2; i <= pathLength + 1; i++) {
-                allBoxRowSelectors.push('.Box-row:nth-child('+ i + ')');
-            }
+            if (mode == 'promiscuous') {
 
-            await Promise.all(allBoxRowSelectors.map(async (boxRowSelector) => {
-
-                if (!isParentDirectoryBox(fakeDom, boxRowSelector)) {
-
-                    console.log(fakeDom('.Details').find(boxRowSelector).html());
-
-                    if (isDirectoryBox(fakeDom, boxRowSelector)) {
-                        
-                        const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(treePathPattern), '');
-
-                        await buildRepoSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats);
-
-                    } else if (isFileBox(fakeDom, boxRowSelector)) {
-
-                        const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
-                        
-                        await buildRepoSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats);
-
-                    }
-
+                for (let i = 2; i <= pathLength + 1; i++) {
+                    allBoxRowSelectors.push('.Box-row:nth-child('+ i + ')');
                 }
 
-            }));
+                await Promise.all(allBoxRowSelectors.map(async (boxRowSelector) => {
+
+                    if (!isParentDirectoryBox(fakeDom, boxRowSelector)) {
+    
+                        // console.log(fakeDom('.Details').find(boxRowSelector).html());
+    
+                        if (isDirectoryBox(fakeDom, boxRowSelector)) {
+                            
+                            const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(treePathPattern), '');
+    
+                            await buildRepoSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+    
+                        } else if (isFileBox(fakeDom, boxRowSelector)) {
+    
+                            const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
+                            
+                            await buildRepoSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+    
+                        }
+    
+                    }
+    
+                }));
+
+            } else if (mode == 'default') {
+
+                let j = 0;
+                for (let i = 2; i <= pathLength + 1; i++) {
+
+                    allBoxRowSelectors.push('.Box-row:nth-child('+ i + ')');
+
+                    if (!isParentDirectoryBox(fakeDom, allBoxRowSelectors[j])) {
+    
+                        if (isDirectoryBox(fakeDom, allBoxRowSelectors[j])) {
+                            
+                            const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(treePathPattern), '');
+    
+                            await buildRepoSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+    
+                        } else if (isFileBox(fakeDom, allBoxRowSelectors[j])) {
+    
+                            const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
+                            
+                            await buildRepoSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+    
+                        }
+    
+                    }
+
+                    j += 1;
+                
+                }
+
+            }
 
         } catch (error) {
 
-            if (error.response) {
+            if (error.response && error.response.status) {
 
                 if (error.response.status == 404) {
-    
-                    response.status(404).send({
+
+                    console.error({
                         error: "Repository does not exist or it's private",
+                        details: error.message
+                    });
+
+                } else if (error.response.status == 429) {
+
+                    console.error({
+                        error: "Too many requests to GitHub",
                         url: error.request.url
                     });
-                
+
                 }
-    
+
             } else {
 
                 console.error({
@@ -124,12 +164,34 @@ const buildRepoSummary = async (path, repo, defaultBranch, extensionStats) => {
 
         } catch (error) {
 
-            console.error({
+            if (error.response && error.response.status) {
 
-                error: 'Something went terribly wrong',
-                details: error.message
-    
-            });
+                if (error.response.status == 404) {
+
+                    console.error({
+                        error: "Repository does not exist or it's private",
+                        details: error.message
+                    });
+
+                } else if (error.response.status == 429) {
+
+                    console.error({
+                        error: "Too many requests to GitHub",
+                        url: error.request.url
+                    });
+
+                }
+
+            } else {
+
+                console.error({
+
+                    error: 'Something went terribly wrong',
+                    details: error.message
+        
+                });
+
+            }
 
         }
 
@@ -155,12 +217,15 @@ const isValid = (repo) => {
 
 };
 
+const isModeValid = (mode) => mode == 'default' | mode == 'promiscuous' ? true : false;
+
 module.exports = {
 
     loadFakeDom,
     determineDefaultBranch,
     determineFileSizeAndExtension,
     buildRepoSummary,
-    isValid
+    isValid,
+    isModeValid
 
 };

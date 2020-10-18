@@ -1,13 +1,13 @@
 const express = require('express');
 
 const githubRequest = require('./utils/request');
-const text = require('./utils/text');
 const repo = require('./utils/repo');
-const { extractFileExtensionFromUrl } = require('./utils/text');
+
+const cache = require('./cache');
 
 const router = new express.Router();
 
-router.get('/', async (request, response, next) => {
+router.get('/', cache.get, async (request, response, next) => {
 
     if (!repo.isValid(request.query.repo)) {
 
@@ -15,6 +15,19 @@ router.get('/', async (request, response, next) => {
 
             error: 'Invalid or empty repository name', 
             expected_syntax: '?repo=owner/repo'
+
+        });
+    
+    }
+
+    const mode = request.query.mode || 'default';
+
+    if (!repo.isModeValid(mode)) {
+
+        return response.status(400).send({ 
+
+            error: 'Invalid mode', 
+            expected_syntax: '?mode=promiscuous or empty for default'
 
         });
     
@@ -34,13 +47,16 @@ router.get('/', async (request, response, next) => {
 
         });
 
-        const defaultBranch = await repo.determineDefaultBranch(fakeDom);
+        const defaultBranch = repo.determineDefaultBranch(fakeDom);
         const url = request.query.repo + '/file-list/' + defaultBranch + '/';
 
         const extensionStats = {};
-        await repo.buildRepoSummary(url, request.query.repo, defaultBranch, extensionStats);
+        await repo.buildRepoSummary(url, request.query.repo, defaultBranch, extensionStats, mode);
 
-        response.send(extensionStats);
+        response.locals.data = extensionStats;
+        response.send(response.locals.data);
+
+        next();
 
     } catch (error) {
 
@@ -77,6 +93,6 @@ router.get('/', async (request, response, next) => {
 
     }
 
-});
+}, cache.set);
 
 module.exports = router;
