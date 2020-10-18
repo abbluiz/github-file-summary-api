@@ -10,19 +10,14 @@ const removeAllWhitespace = (text) => {
 
 const countLines = (text) => {
 
-    /* 
-    *  text will be something like this:
-    *  0lines(0sloc)0Bytes
-    *  where 0 in '0lines' may vary according to the number of lines of a file in a GitHub repo 
-    *  sometimes a file doesn't have any lines of code, in this case it will count as 1 lines
-    */
-
    const indexOfLinesWord = text.indexOf('lines');
    
     if (indexOfLinesWord != -1) {
-        return parseInt(text.slice(0, indexOfLinesWord));
+        return parseInt(text.slice(0, indexOfLinesWord)); // if format is xlines(xsloc)xxBytes[or KB, or MB]
+    } else if (text.lastIndexOf('ExecutableFile') != -1) {
+        return parseInt(text.slice(text.lastIndexOf('ExecutableFile') + 1, indexOfLinesWord)); // if format is ExecutableFilexlines(xsloc)xxBytes[or KB, or MB]
     } else {
-        return 1;
+        return 1; // if format is xxBytes[or KB, or MB]
     }
 
 };

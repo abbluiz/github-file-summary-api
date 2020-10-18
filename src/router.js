@@ -53,6 +53,8 @@ router.get('/', cache.get, async (request, response, next) => {
         const extensionStats = {};
         await repo.buildRepoSummary(url, request.query.repo, defaultBranch, extensionStats, mode);
 
+        // response.send(extensionStats);
+
         response.locals.data = extensionStats;
         response.send(response.locals.data);
 
