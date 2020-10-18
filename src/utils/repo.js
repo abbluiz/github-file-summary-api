@@ -18,7 +18,7 @@ const determineFileSizeAndExtension = (url, fakeDom) => ({
 
 });
 
-const buildSummary = async (path, repo, defaultBranch, extensionStats, mode) => {
+const buildSummary = async (path, repo, defaultBranch, extensionStats, mode, callback) => {
 
     let fakeDom = {};
 
@@ -29,7 +29,7 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode) => 
             await githubRequest(path, (error, githubResponse) => {
 
                 if (error) {
-                    throw new Error(error);
+                    throw error;
                 }
 
                 fakeDom = loadFakeDom(githubResponse.data); 
@@ -51,19 +51,17 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode) => 
 
                     if (!isParentDirectoryBox(fakeDom, boxRowSelector)) {
     
-                        // console.log(fakeDom('.Details').find(boxRowSelector).html());
-    
                         if (isDirectoryBox(fakeDom, boxRowSelector)) {
                             
                             const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(treePathPattern), '');
     
-                            await buildSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+                            await buildSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
     
                         } else if (isFileBox(fakeDom, boxRowSelector)) {
     
                             const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
                             
-                            await buildSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
+                            await buildSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
     
                         }
     
@@ -71,7 +69,7 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode) => 
     
                 }));
 
-            } else if (mode == 'default') {
+            } else if (mode == 'polite') {
 
                 let j = 0;
                 for (let i = 2; i <= pathLength + 1; i++) {
@@ -100,39 +98,41 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode) => 
                 
                 }
 
+            } else if (mode == 'moderate') {
+
+                for (let i = 2; i <= pathLength + 1; i++) {
+                    allBoxRowSelectors.push('.Box-row:nth-child('+ i + ')');
+                }
+
+                console.log("Waiting 1000 ms like a good boy...");
+                await sleep(10000);
+
+                await Promise.all(allBoxRowSelectors.map(async (boxRowSelector) => {
+
+                    if (!isParentDirectoryBox(fakeDom, boxRowSelector)) {
+    
+                        if (isDirectoryBox(fakeDom, boxRowSelector)) {
+                            
+                            const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(treePathPattern), '');
+    
+                            await buildSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
+    
+                        } else if (isFileBox(fakeDom, boxRowSelector)) {
+    
+                            const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
+                            
+                            await buildSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
+    
+                        }
+    
+                    }
+    
+                }));
+
             }
 
         } catch (error) {
-
-            if (error.response && error.response.status) {
-
-                if (error.response.status == 404) {
-
-                    console.error({
-                        error: "Repository does not exist or it's private",
-                        details: error.message
-                    });
-
-                } else if (error.response.status == 429) {
-
-                    console.error({
-                        error: "Too many requests to GitHub",
-                        url: error.request.url
-                    });
-
-                }
-
-            } else {
-
-                console.error({
-
-                    error: 'Something went terribly wrong',
-                    details: error.message
-        
-                });
-
-            }
-
+            callback(error);
         }
 
     } else if (path.indexOf(repo + '/blob/') == 0) {
@@ -142,7 +142,7 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode) => 
             await githubRequest(path, (error, githubResponse) => {
 
                 if (error) {
-                    throw new Error(error);
+                    throw error;
                 }
     
                 fakeDom = loadFakeDom(githubResponse.data); 
@@ -161,36 +161,7 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode) => 
             }
 
         } catch (error) {
-
-            if (error.response && error.response.status) {
-
-                if (error.response.status == 404) {
-
-                    console.error({
-                        error: "Repository does not exist or it's private",
-                        details: error.message
-                    });
-
-                } else if (error.response.status == 429) {
-
-                    console.error({
-                        error: "Too many requests to GitHub",
-                        url: error.request.url
-                    });
-
-                }
-
-            } else {
-
-                console.error({
-
-                    error: 'Something went terribly wrong',
-                    details: error.message
-        
-                });
-
-            }
-
+            callback(error);
         }
 
     }
@@ -215,7 +186,9 @@ const isValid = (repo) => {
 
 };
 
-const isModeValid = (mode) => mode == 'default' | mode == 'promiscuous' ? true : false;
+const isModeValid = (mode) => mode == 'moderate' | mode == 'promiscuous' | mode == 'polite' ? true : false;
+
+const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms) });
 
 module.exports = {
 

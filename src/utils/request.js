@@ -4,7 +4,7 @@ const rax = require('retry-axios');
 const githubRequest = async (path, callback) => {
 
     const url = 'https://github.com/' + path;
-    console.log(url);
+    console.log('Performing request to ' + url);
 
     const interceptorId = rax.attach();
 
@@ -17,11 +17,11 @@ const githubRequest = async (path, callback) => {
             raxConfig: {
 
                 retry: 7,
-                retryDelay: 120000,
+                retryDelay: 30000,
                 onRetryAttempt: err => {
 
                     const cfg = rax.getConfig(err);
-                    console.log(`Retry attempt #${cfg.currentRetryAttempt} (${url})`);
+                    console.log(`Retrying request attempt (${url})`);
 
                 }
             
@@ -32,8 +32,10 @@ const githubRequest = async (path, callback) => {
         callback(undefined, response);
 
     } catch (error) {
+
         console.log(error.message);
         callback(error, undefined);
+    
     }
 
 };

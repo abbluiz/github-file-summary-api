@@ -20,7 +20,7 @@ router.get('/', cache.get, async (request, response, next) => {
     
     }
 
-    const mode = request.query.mode || 'default';
+    const mode = request.query.mode || 'moderate';
 
     if (!repo.isModeValid(mode)) {
 
@@ -40,7 +40,7 @@ router.get('/', cache.get, async (request, response, next) => {
         await githubRequest(request.query.repo, (error, githubResponse) => {
 
             if (error) {
-                throw new Error(error);
+                throw error;
             }
 
             fakeDom = repo.loadFakeDom(githubResponse.data); 
@@ -51,7 +51,13 @@ router.get('/', cache.get, async (request, response, next) => {
         const url = request.query.repo + '/file-list/' + defaultBranch + '/';
 
         const extensionStats = {};
-        await repo.buildSummary(url, request.query.repo, defaultBranch, extensionStats, mode);
+        await repo.buildSummary(url, request.query.repo, defaultBranch, extensionStats, mode, (error) => {
+
+            if (error) {
+                throw error;
+            }
+
+        });
 
         response.locals.data = extensionStats;
         response.send(response.locals.data);
@@ -68,6 +74,12 @@ router.get('/', cache.get, async (request, response, next) => {
                     error: "Repository does not exist or it's private",
                 });
             
+            } else if (error.response.status == 429) {
+                
+                response.status(500).send({
+                   error: "Repository is too big for this mode" 
+                });
+
             }
 
         } else if (error.request) {
@@ -75,8 +87,7 @@ router.get('/', cache.get, async (request, response, next) => {
             response.status(500).send({
 
                 error: 'Request was made but no response was received',
-                details: error.message,
-                request: error.request, 
+                details: error.message
 
             });
 
