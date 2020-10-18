@@ -162,8 +162,3 @@ module.exports = {
     isValid
 
 };
-
-// 
-// // response.send($('.repository-content > .gutter-condensed > div > .Box > .Details > .Details-content--hidden-not-important').html());
-// // response.send($('.repository-content > .Box').html());
-// // const linesAndBytes = await text.countLinesAndBytesOfFile($(".repository-content > div:nth-child(5) > .Box-header > div:first-child").text());
