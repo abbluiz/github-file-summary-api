@@ -2,13 +2,13 @@ For Trustly
 
 # github-file-summary-api
 
-It will return JSON data containing a summary of file sizes in a public GitHub repository, grouped by file extension.
+It will return JSON data containing a summary of file sizes of a public GitHub repository, grouped by file extension.
 
 ### Example of request/response
 
 #### Request
 ```
-GET api-basename-url/?repo=abbluiz/ps1-gen
+GET https://labb-gh-summary.heroku.com/?repo=abbluiz/ps1-gen
 ```
 Where `abbluiz/ps1-gen` is a GitHub public repository in the form of `owner/repo`.
 
