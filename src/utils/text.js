@@ -48,7 +48,7 @@ const countBytes = (text) => {
 
 };
 
-const countLinesAndBytesOfFile = async (text) => {
+const countLinesAndBytesOfFile = (text) => {
 
     return {
     
