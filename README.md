@@ -48,4 +48,4 @@ You can pass `?mode=promiscuous` to the request if you want to enable this mode,
 
 ### Default Mode
 
-If you don't pass the promiscuous mode option, the recursion will be much slower, taking a few minutes to crawl a big repository.
+If you don't pass the promiscuous mode option, the recursion will be much slower, taking a few minutes to crawl a big repository. Subsequent requests will be fast, though, because of the cache.
