@@ -2,33 +2,47 @@ const express = require('express');
 const cheerio = require('cheerio');
 
 const githubRequest = require('./utils/request');
-const repo = require('./utils/traverse-repo-files');
+const text = require('./utils/text');
+const repo = require('./utils/repo');
 
 const router = new express.Router();
 
 router.get('/', async (request, response, next) => {
 
-    let githubResponse = "";
+    if (!repo.isValidRepo(request.query.repo)) {
+
+        return response.status(400).send({ 
+
+            error: 'Invalid or empty repository name', 
+            expected_syntax: 'owner/repo'
+
+        });
+    
+    }
 
     try {
 
-        await githubRequest('https://github.com/PrivacidadeDigital/privacidade.digital/blob/master/pages/providers/vpn.html', (errorMessage, response) => {
+        await githubRequest(request.query.repo, (error, githubResponse) => {
 
-            if (errorMessage) {
-                throw new Error(errorMessage);
+            if (error) {
+                throw new Error(error);
             }
 
-            githubResponse = response;
+            // do something with github response
 
         });
 
-        const $ = cheerio.load(githubResponse.data);
-        // response.send($('.repository-content > .gutter-condensed > div > .Box > .Details > .Details-content--hidden-not-important').html());
-        // response.send($(".repository-content > div:nth-child(5) > .Box-header > div:first-child").html());
-        repo.countLines($(".repository-content > div:nth-child(5) > .Box-header > div:first-child").text());
+        response.send("Hello World!");
 
     } catch (error) {
-        response.status(500).send({error});
+
+        response.status(404).send({
+
+            error: "Repository does not exist or it's private",
+            gh_status_code: error.message
+            
+        });
+
     }
 
 });

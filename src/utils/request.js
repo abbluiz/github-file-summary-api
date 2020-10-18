@@ -1,6 +1,8 @@
 const axios = require('axios');
 
-const githubRequest = async (url, callback) => {
+const githubRequest = async (repo, callback) => {
+
+    const url = 'https://github.com/' + repo;
 
     try {
 
@@ -8,7 +10,7 @@ const githubRequest = async (url, callback) => {
         callback(undefined, response);
 
     } catch (error) {
-        callback(error, undefined);
+        callback(error.response.status, undefined);
     }
 
 };
