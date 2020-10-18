@@ -10,14 +10,15 @@ const removeAllWhitespace = (text) => {
 
 const countLines = (text) => {
 
-   const indexOfLinesWord = text.indexOf('lines');
+    const indexOfLinesWord = text.indexOf('lines');
+    const indexOfExecutableFileWord = text.indexOf('executablefile');
    
-    if (indexOfLinesWord != -1) {
-        return parseInt(text.slice(0, indexOfLinesWord)); // if format is xlines(xsloc)xxBytes[or KB, or MB]
-    } else if (text.lastIndexOf('ExecutableFile') != -1) {
-        return parseInt(text.slice(text.lastIndexOf('ExecutableFile') + 1, indexOfLinesWord)); // if format is ExecutableFilexlines(xsloc)xxBytes[or KB, or MB]
-    } else {
-        return 1; // if format is xxBytes[or KB, or MB]
+    if (indexOfLinesWord == -1) { // if format is xxBytes[or KB, or MB]
+        return 1; 
+    } else if (indexOfExecutableFileWord == 0) { // if format is executablefilexlines(xsloc)xxBytes[or KB, or MB]
+        return parseInt(text.slice('executablefile'.length, indexOfLinesWord)); 
+    } else { // if format is xlines(xsloc)xxBytes[or KB, or MB]
+        return parseInt(text.slice(0, indexOfLinesWord)); 
     }
 
 };
