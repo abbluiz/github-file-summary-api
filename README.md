@@ -14,7 +14,9 @@ An API that returns a file size summary of a given GitHub public repository, gro
 * [Setting Up Your Environment](#setting-up-your-environment)
 
 [Query Parameters](#query-parameters)
+
 [Queue System](#queue-system)
+
 [Web Scraping](#web-scraping)
 
 [Recursion Modes](#recursion-modes)
