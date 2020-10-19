@@ -12,6 +12,8 @@ An API that returns a file size summary of a given GitHub public repository, gro
 
 [Running the API](#running-the-api)
 * [Setting Up Your Environment](#setting-up-your-environment)
+* [Default Environment](#default-environment)
+* [Special Environments](#special-environments)
 
 [Query Parameters](#query-parameters)
 
@@ -64,31 +66,37 @@ You can test with the live demo at `https://labb-gh-summary.herokuapp.com`, or i
 
 ### Setting Up Your Environment
 
+#### Default Environment
+
+Just run `npm run start` and be happy.
+
+#### Special Environments
+
 First of all, you must create a directory named `config` inside the root of the repository files.
 
-For development environments: a file named `dev.env` inside the root of the repository files. There you can set `PORT={NUMBER}` to change the port and `PROMISCUOUS=true|false` to enable/disable promiscuous mode (disabled by default). Start the API with `npm run dev`.
+**Production**: a file named `dev.env` must be created inside the config directory. There you can set `PORT={NUMBER}` to change the port and `PROMISCUOUS=true|false` to enable/disable promiscuous mode (disabled by default). Start the API with `npm run dev`.
 
-For production environments: same thing, but file is named `prod.env` and `npm run start2` to start API.
+**Development**: auto reload with nodemon will be enabled; same instructions, but file must be named `dev.env` and `npm run dev` must be runned to start API.
 
-For testing environments: same thing, but file is named `test.env` and `npm run test` to start API.
+**Testing**: it will perform some automatic tests; same instructions, but file must be named `test.env` and `npm run test` must be runned to start API.
 
 ## Query Parameters
 
-* `?repo=owner/repo`: `owner` must be a valid GitHub username (individual or organization). `repo` must be a valid GitHub repository name.
+* `?repo=owner/repo`: where `owner` must be a valid GitHub username (individual or organization), and `repo` must be a valid GitHub repository name.
 
-GitHub usernames cannot have more than 39 characters, accept hyphens (-) but cannot start or finish with hyphens or have consecutive hyphens, and only accepts alphanumeric characters (case insensitive).
+GitHub usernames cannot have more than 39 characters; they accept hyphens (-) but cannot start or finish with hyphens or have consecutive hyphens; usernames only accepts alphanumeric characters and it's case insensitive.
 
-Repository names are more flexible. They can have up to 100 characters, and can have alphanumeric characters, dashes, dots, and underscores.
+Repository names are more flexible: they can have up to 100 characters; can have alphanumeric characters, dashes, dots, and underscores.
 
-Shout out to this CC0-licensed repository for information about this: https://github.com/shinnn/github-username-regex
+Shout out to this CC0-licensed repository for information about this: https://github.com/shinnn/github-username-regex.
 
 * `?mode=moderate|polite|promiscuous`: only these three modes are acceptable, however `promiscuous` is not enabled by default. The default value is `moderate`.
 
-This will set the "agressiveness" of the web scraping performed by the API. `polite` mode is the slowest and nicest for GitHub, `moderate` is slow and OK for GitHub, and `promiscuous` is the fastest and quite nasty for GitHub. In fact, `promiscuous` mode will most certainly cause GitHub to answer with 429 Errors (Too Many Requests) if the given repository is big enough.
+This will set the "agressiveness" of the web scraping recursion performed by the API. `polite` mode is the slowest and nicest for GitHub, `moderate` is slow and OK for GitHub, and `promiscuous` is the fastest and quite nasty for GitHub. In fact, `promiscuous` mode will most certainly cause GitHub to answer with 429 Errors (Too Many Requests) if the given repository is big enough.
 
 ## Queue System
 
-Once a request is made, it will enter in a job queue. While it is being resolved, or waiting in the queue, the API will answer with the following response:
+Once a request is made, it will enter in a job queue. While it is being resolved or waiting in the queue, the API will answer with the following response:
 
 Status Code: 202 (Accepted)
 
@@ -98,7 +106,7 @@ Status Code: 202 (Accepted)
 }
 ```
 
-You must perform another request to the same URL (with the same parameters) in another time to get the results. Once the results are returned as demonstrated from the earlier example, it will remain in a cache for 6 hours.
+You must perform another request to the same URL (with the same parameters) in another time to get the results. Once the results are returned as demonstrated from the earlier example, it will remain in a cache for 6 hours before expiring.
 
 ## Web Scraping
 
@@ -112,7 +120,7 @@ The API will crawl the repo files in a recursive manner. Each time the recursion
 
 ### Moderate Mode
 
-The `moderate` mode is the default. It will perform concurrent requests to GitHub in chunks of a maximum of 5 requests, and with a 2-second interval between chunks. This is faster than `polite` mode, but still much slower than `promiscuous` mode. It will handle any repository size.
+The `moderate` mode is the default. It will perform concurrent requests to GitHub in chunks of a maximum of 5 requests, and with a 2-second delay interval between chunks. This is faster than `polite` mode, but still much slower than `promiscuous` mode. It will handle any repository size.
 
 ### Polite Mode
 
