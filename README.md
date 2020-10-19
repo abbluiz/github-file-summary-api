@@ -74,7 +74,7 @@ Just run `npm run start` and be happy.
 
 First of all, you must create a directory named `config` inside the root of the repository files.
 
-**Production**: a file named `dev.env` must be created inside the config directory. There you can set `PORT={NUMBER}` to change the port and `PROMISCUOUS=true|false` to enable/disable promiscuous mode (disabled by default). Start the API with `npm run dev`.
+**Production**: a file named `prod.env` must be created inside the config directory. There you can set `PORT={NUMBER}` to change the port and `PROMISCUOUS=true|false` to enable/disable promiscuous mode (disabled by default). Start the API with `npm run start2`.
 
 **Development**: auto reload with nodemon will be enabled; same instructions, but file must be named `dev.env` and `npm run dev` must be runned to start API.
 
