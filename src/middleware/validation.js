@@ -26,7 +26,9 @@ const perform = (request, response, next) => {
     
     }
 
-    if (mode == 'promiscuous') {
+    const isPromiscuousModeEnabled = process.env.PROMISCUOUS || false;
+
+    if (mode == 'promiscuous' && isPromiscuousModeEnabled == false) {
 
         return response.status(400).send({
             error: 'Promiscuous mode is currently disabled.',
