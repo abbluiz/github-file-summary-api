@@ -17,7 +17,7 @@ const handle = (error, request, response, next) => {
             
             response.locals.data = {
 
-                error: "Repository is too big for 'promiscuous' mode (too many requests for GitHub). Please choose 'polite' or 'moderate' modes for this one.",
+                error: "Repository is too big for this mode (too many requests for GitHub). Please try another recursion mode.",
                 code: 500
 
              }
@@ -28,7 +28,7 @@ const handle = (error, request, response, next) => {
 
         response.locals.data = {
 
-            error: 'Request was made but no response was received from GitHub. Please wait a couple of minutes and choose another mode for this repository.',
+            error: 'Request was made but no response was received from GitHub. Please wait a couple of minutes and try it with another mode.',
             code: 500
 
         };
@@ -39,7 +39,7 @@ const handle = (error, request, response, next) => {
 
         response.locals.data = {
 
-            error: "Something went terribly wrong while trying to build this repository's summary. Please wait a couple of minutes and choose another mode for this repository.",
+            error: "Something went terribly wrong while trying to build this repository's summary. Please wait a couple of minutes and try it with another mode.",
             code: 500
 
         };
