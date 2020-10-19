@@ -9,11 +9,14 @@ Summary
 [Example](#example)
 * [Request](#request)
 * [Response](#response)
+
 [Running the API](#running-the-api)
 * [Setting Up Your Environment](#setting-up-your-environment)
+
 [Query Parameters](#query-parameters)
 [Queue System](#queue-system)
 [Web Scraping](#web-scraping)
+
 [Recursion Modes](#recursion-modes)
 * [Moderate Mode](#moderate-mode)
 * [Polite Mode](#polite-mode)
