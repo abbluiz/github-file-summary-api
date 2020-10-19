@@ -30,6 +30,7 @@
     "escape-string-regexp": "^4.0.0",
     "express": "^4.17.1",
     "node-cache": "^5.1.2",
+    "p-queue": "^6.6.2",
     "retry-axios": "^2.2.1"
   }
 }

@@ -15,8 +15,8 @@ const set = (request, response, next) => {
     const url = getUrlFromRequest(request);
 
     console.log('cache.set url: ' + url);
-
     cache.set(url, response.locals.data);
+
     return next();
 
 };
@@ -30,11 +30,35 @@ const get = (request, response, next) => {
     console.log('cache.get data: ' + data);
 
     if (data) {
+
+        if (data.info) {
+            return response.status(202).send(data);
+        }
+
+        if (data.code) {
+
+            if (data.code == 404) { return response.status(404).send(data); }
+            if (data.code == 500) { return response.status(500).send(data); }
+
+        }
+
         return response.status(200).send(data);
+    
     }
 
     return next();
 
 };
 
-module.exports = { get, set };
+const setWaitInLineInfo = (url, data) => {
+
+    console.log('cache.set url: ' + url);
+    cache.set(url, data);
+
+};
+
+const getErrorCheck = (url) => {
+    return cache.get(url);
+};
+
+module.exports = { getUrlFromRequest, get, set, setWaitInLineInfo, getErrorCheck };

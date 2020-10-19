@@ -1,19 +1,25 @@
 const express = require('express');
+const {default: PQueue} = require('p-queue');
 
 const githubRequest = require('./utils/request');
 const repo = require('./utils/repo');
 
-const cache = require('./cache');
+const cache = require('./middleware/cache');
+const line = require('./middleware/wait-in-line');
+
+const { handle } = require('./utils/error');
 
 const router = new express.Router();
 
-router.get('/', cache.get, async (request, response, next) => {
+const queue = new PQueue({concurrency: 1});
+
+router.get('/', cache.get, line.set, async (request, response, next) => {
 
     if (!repo.isValid(request.query.repo)) {
 
         return response.status(400).send({ 
 
-            error: 'Invalid or empty repository name', 
+            error: "Invalid or empty GitHub repository name. It is not possible to create an 'owner/repo' in GitHub like this.", 
             expected_syntax: '?repo=owner/repo'
 
         });
@@ -26,8 +32,8 @@ router.get('/', cache.get, async (request, response, next) => {
 
         return response.status(400).send({ 
 
-            error: 'Invalid mode', 
-            expected_syntax: '?mode=promiscuous or empty for default'
+            error: 'Invalid web scraping mode.', 
+            expected_syntax: '?mode=promiscuous or ?mode=polite or ?mode=moderate (default)'
 
         });
     
@@ -51,59 +57,46 @@ router.get('/', cache.get, async (request, response, next) => {
         const url = request.query.repo + '/file-list/' + defaultBranch + '/';
 
         const extensionStats = {};
-        await repo.buildSummary(url, request.query.repo, defaultBranch, extensionStats, mode, (error) => {
+        
+        (async () => {
 
-            if (error) {
-                throw error;
+            try {
+
+                const task = await repo.buildSummaryRecursive(url, request.query.repo, defaultBranch, extensionStats, mode, {
+
+                    request,
+                    response,
+                    next
+                
+                });
+
+                await queue.add(task);
+
+            } catch (error) {
+                handle(error, request, response, next);
             }
 
-        });
+            const cacheData = cache.getErrorCheck(cache.getUrlFromRequest(request));
+            
+            if (cacheData) {
+            
+                if (cacheData.error) {
+                    return;
+                }
+            
+            }
 
-        response.locals.data = extensionStats;
-        response.send(response.locals.data);
+            response.locals.data = extensionStats;
+            cache.set(request, response, next);
 
-        next();
+        })();
+
+        return next();
 
     } catch (error) {
-
-        if (error.response) {
-
-            if (error.response.status == 404) {
-
-                response.status(404).send({
-                    error: "Repository does not exist or it's private",
-                });
-            
-            } else if (error.response.status == 429) {
-                
-                response.status(500).send({
-                   error: "Repository is too big for this mode" 
-                });
-
-            }
-
-        } else if (error.request) {
-
-            response.status(500).send({
-
-                error: 'Request was made but no response was received',
-                details: error.message
-
-            });
-
-        } else {
-
-            response.status(500).send({
-
-                error: 'Something went terribly wrong',
-                details: error.message
-    
-            });
-
-        }
-
+        handle(error, request, response, next);
     }
 
-}, cache.set);
+});
 
 module.exports = router;

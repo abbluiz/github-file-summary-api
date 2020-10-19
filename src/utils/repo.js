@@ -3,6 +3,7 @@ const escapeStringRegexp = require('escape-string-regexp');
 
 const githubRequest = require('./request');
 const text = require('./text');
+const { handle } = require('../utils/error');
 
 const loadFakeDom = (githubResponseData) => cheerio.load(githubResponseData);
 
@@ -18,13 +19,13 @@ const determineFileSizeAndExtension = (url, fakeDom) => ({
 
 });
 
-const buildSummary = async (path, repo, defaultBranch, extensionStats, mode, callback) => {
+const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, mode, expressData) => {
 
-    let fakeDom = {};
+    try {
 
-    if (path.indexOf(repo + '/file-list/') == 0) {
-        
-        try {
+        let fakeDom = {};
+
+        if (path.indexOf(repo + '/file-list/') == 0) {
 
             await githubRequest(path, (error, githubResponse) => {
 
@@ -50,23 +51,23 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode, cal
                 await Promise.all(allBoxRowSelectors.map(async (boxRowSelector) => {
 
                     if (!isParentDirectoryBox(fakeDom, boxRowSelector)) {
-    
+
                         if (isDirectoryBox(fakeDom, boxRowSelector)) {
                             
                             const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(treePathPattern), '');
-    
-                            await buildSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
-    
+
+                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, expressData);
+
                         } else if (isFileBox(fakeDom, boxRowSelector)) {
-    
-                            const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
+
+                            const filePath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
                             
-                            await buildSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
-    
+                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, expressData);
+
                         }
-    
+
                     }
-    
+
                 }));
 
             } else if (mode == 'polite') {
@@ -77,78 +78,94 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode, cal
                     allBoxRowSelectors.push('.Box-row:nth-child('+ i + ')');
 
                     if (!isParentDirectoryBox(fakeDom, allBoxRowSelectors[j])) {
-    
+
                         if (isDirectoryBox(fakeDom, allBoxRowSelectors[j])) {
                             
                             const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(treePathPattern), '');
-    
-                            await buildSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
-    
+
+                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, expressData);
+
                         } else if (isFileBox(fakeDom, allBoxRowSelectors[j])) {
-    
-                            const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
+
+                            const filePath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
                             
-                            await buildSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode);
-    
+                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, expressData);
+
                         }
-    
+
                     }
 
                     j += 1;
                 
                 }
 
-            } else if (mode == 'moderate') {
+            } else if (mode == 'moderate') {  
 
+                const filePaths = [];
+
+                let j = 0;
                 for (let i = 2; i <= pathLength + 1; i++) {
+
                     allBoxRowSelectors.push('.Box-row:nth-child('+ i + ')');
+
+                    if (!isParentDirectoryBox(fakeDom, allBoxRowSelectors[j])) {
+
+                        if (isDirectoryBox(fakeDom, allBoxRowSelectors[j])) {
+
+                            const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(treePathPattern), '');
+                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, expressData);
+
+                        } else if (isFileBox(fakeDom, allBoxRowSelectors[j])) {
+
+                            const filePath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
+                            filePaths.push(filePath);
+                        
+                        }
+
+                    }
+
+                    j += 1;
+                
                 }
 
-                console.log("Waiting 1000 ms like a good boy...");
-                await sleep(10000);
+                if (filePaths.length >= 5) {
 
-                await Promise.all(allBoxRowSelectors.map(async (boxRowSelector) => {
+                    const chunkedPaths = chunkArray(filePaths, 5);
 
-                    if (!isParentDirectoryBox(fakeDom, boxRowSelector)) {
-    
-                        if (isDirectoryBox(fakeDom, boxRowSelector)) {
-                            
-                            const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(treePathPattern), '');
-    
-                            await buildSummary(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
-    
-                        } else if (isFileBox(fakeDom, boxRowSelector)) {
-    
-                            const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
-                            
-                            await buildSummary(repo + '/blob/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
-    
-                        }
-    
+                    for (let i = 0; i < chunkedPaths.length; i++) {
+
+                        await Promise.all(chunkedPaths[i].map(async (filePath) => {
+
+                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, expressData);
+                        
+                        }));
+
+                        await sleep(2000);
+
                     }
-    
-                }));
+
+                } else {
+
+                    await Promise.all(filePaths.map(async (filePath) => {
+                        await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, expressData);
+                    }));
+
+                }
 
             }
 
-        } catch (error) {
-            callback(error);
-        }
-
-    } else if (path.indexOf(repo + '/blob/') == 0) {
-
-        try {
-            
+        } else if (path.indexOf(repo + '/blob/') == 0) {
+                
             await githubRequest(path, (error, githubResponse) => {
 
                 if (error) {
                     throw error;
                 }
-    
+
                 fakeDom = loadFakeDom(githubResponse.data); 
-    
+
             });
-    
+
             const fileMeta = determineFileSizeAndExtension(path, fakeDom);
 
             if (extensionStats[fileMeta.stats.fileExtension] == undefined) {
@@ -160,10 +177,10 @@ const buildSummary = async (path, repo, defaultBranch, extensionStats, mode, cal
             
             }
 
-        } catch (error) {
-            callback(error);
         }
 
+    } catch (error) {
+        handle(error, expressData.request, expressData.response, expressData.next);
     }
 
 };
@@ -186,16 +203,28 @@ const isValid = (repo) => {
 
 };
 
-const isModeValid = (mode) => mode == 'moderate' | mode == 'promiscuous' | mode == 'polite' ? true : false;
+const isModeValid = (mode) => mode == 'promiscuous' | mode == 'polite' | mode == 'moderate' ? true : false;
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms) });
+
+const chunkArray = (arr, chunkSize) => {
+
+    const results = [];
+
+    while (arr.length) {
+        results.push(arr.splice(0, chunkSize));
+    }
+
+    return results;
+
+};
 
 module.exports = {
 
     loadFakeDom,
     determineDefaultBranch,
     determineFileSizeAndExtension,
-    buildSummary,
+    buildSummaryRecursive,
     isValid,
     isModeValid
 
