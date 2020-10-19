@@ -19,7 +19,7 @@ const determineFileSizeAndExtension = (url, fakeDom) => ({
 
 });
 
-const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, mode, expressData) => {
+const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, mode, callback) => {
 
     try {
 
@@ -56,13 +56,13 @@ const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, 
                             
                             const dirPath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(treePathPattern), '');
 
-                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, expressData);
+                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
 
                         } else if (isFileBox(fakeDom, boxRowSelector)) {
 
                             const filePath = fakeDom('.Details').find(boxRowSelector).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
                             
-                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, expressData);
+                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, callback);
 
                         }
 
@@ -83,13 +83,13 @@ const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, 
                             
                             const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(treePathPattern), '');
 
-                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, expressData);
+                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
 
                         } else if (isFileBox(fakeDom, allBoxRowSelectors[j])) {
 
                             const filePath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(blobPathPattern), '');
                             
-                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, expressData);
+                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, callback);
 
                         }
 
@@ -113,7 +113,7 @@ const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, 
                         if (isDirectoryBox(fakeDom, allBoxRowSelectors[j])) {
 
                             const dirPath = fakeDom('.Details').find(allBoxRowSelectors[j]).find('a').attr('href').replace(new RegExp(treePathPattern), '');
-                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, expressData);
+                            await buildSummaryRecursive(repo + '/file-list/' + defaultBranch + '/' + dirPath, repo, defaultBranch, extensionStats, mode, callback);
 
                         } else if (isFileBox(fakeDom, allBoxRowSelectors[j])) {
 
@@ -136,7 +136,7 @@ const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, 
 
                         await Promise.all(chunkedPaths[i].map(async (filePath) => {
 
-                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, expressData);
+                            await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, callback);
                         
                         }));
 
@@ -147,7 +147,7 @@ const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, 
                 } else {
 
                     await Promise.all(filePaths.map(async (filePath) => {
-                        await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, expressData);
+                        await buildSummaryRecursive(repo + '/blob/' + defaultBranch + '/' + filePath, repo, defaultBranch, extensionStats, mode, callback);
                     }));
 
                 }
@@ -180,7 +180,7 @@ const buildSummaryRecursive = async (path, repo, defaultBranch, extensionStats, 
         }
 
     } catch (error) {
-        handle(error, expressData.request, expressData.response, expressData.next);
+        callback(error);
     }
 
 };

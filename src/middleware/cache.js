@@ -14,7 +14,6 @@ const set = (request, response, next) => {
 
     const url = getUrlFromRequest(request);
 
-    console.log('cache.set url: ' + url);
     cache.set(url, response.locals.data);
 
     return next();
@@ -25,9 +24,6 @@ const get = (request, response, next) => {
 
     const url = getUrlFromRequest(request);
     const data = cache.get(url);
-
-    console.log('cache.get url: ' + url);
-    console.log('cache.get data: ' + data);
 
     if (data) {
 
@@ -51,10 +47,7 @@ const get = (request, response, next) => {
 };
 
 const setWaitInLineInfo = (url, data) => {
-
-    console.log('cache.set url: ' + url);
     cache.set(url, data);
-
 };
 
 const getErrorCheck = (url) => {

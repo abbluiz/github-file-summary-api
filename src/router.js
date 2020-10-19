@@ -4,6 +4,7 @@ const {default: PQueue} = require('p-queue');
 const githubRequest = require('./utils/request');
 const repo = require('./utils/repo');
 
+const validation = require('./middleware/validation');
 const cache = require('./middleware/cache');
 const line = require('./middleware/wait-in-line');
 
@@ -13,31 +14,9 @@ const router = new express.Router();
 
 const queue = new PQueue({concurrency: 1});
 
-router.get('/', cache.get, line.set, async (request, response, next) => {
-
-    if (!repo.isValid(request.query.repo)) {
-
-        return response.status(400).send({ 
-
-            error: "Invalid or empty GitHub repository name. It is not possible to create an 'owner/repo' in GitHub like this.", 
-            expected_syntax: '?repo=owner/repo'
-
-        });
-    
-    }
+router.get('/', cache.get, validation.perform, line.set, async (request, response, next) => {
 
     const mode = request.query.mode || 'moderate';
-
-    if (!repo.isModeValid(mode)) {
-
-        return response.status(400).send({ 
-
-            error: 'Invalid web scraping mode.', 
-            expected_syntax: '?mode=promiscuous or ?mode=polite or ?mode=moderate (default)'
-
-        });
-    
-    }
 
     try {
 
@@ -62,15 +41,13 @@ router.get('/', cache.get, line.set, async (request, response, next) => {
 
             try {
 
-                const task = await repo.buildSummaryRecursive(url, request.query.repo, defaultBranch, extensionStats, mode, {
+                await queue.add(() => repo.buildSummaryRecursive(url, request.query.repo, defaultBranch, extensionStats, mode, (error) => {
 
-                    request,
-                    response,
-                    next
-                
-                });
+                    if (error) {
+                        throw error;
+                    }
 
-                await queue.add(task);
+                }));
 
             } catch (error) {
                 handle(error, request, response, next);

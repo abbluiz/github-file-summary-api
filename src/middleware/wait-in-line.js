@@ -5,7 +5,7 @@ const set = (request, response, next) => {
     const url = cache.getUrlFromRequest(request);
 
     const data = {
-        info: "Server has started building this repo summary. Come back in a few seconds (or minutes) for the results."
+        info: "Server has started building repository summary. Come back in a moment for the results."
     };
 
     cache.setWaitInLineInfo(url, data);

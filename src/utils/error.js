@@ -35,6 +35,8 @@ const handle = (error, request, response, next) => {
 
     } else {
 
+        console.log(error);
+
         response.locals.data = {
 
             error: "Something went terribly wrong while trying to build this repository's summary. Please wait a couple of minutes and choose another mode for this repository.",
