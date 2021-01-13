@@ -1,5 +1,3 @@
-Made for Trustly
-
 # github-file-summary-api
 
 An API that returns a file size summary of a given GitHub public repository, grouped by file extension. Live demo available at `https://labb-gh-summary.herokuapp.com`.
